@@ -18,6 +18,7 @@ param(
     [switch]$RunMovieGroup,
     [switch]$RunLevelByScore,
     [switch]$RunLowHigh,
+    [switch]$RunMemoryType,
     [switch]$OpenOutputs
 )
 
@@ -32,41 +33,30 @@ function Abort($msg) {
     exit 1
 }
 
-# Ensure data file exists (robust to Unicode normalization/encoding differences)
-$dataDir = Join-Path $root "data\raw"
+## Resolve data file path strictly from ./data (no choices elsewhere).
 $expectedName = 'データ_edit.xlsx'
-$dataPath = Join-Path $dataDir $expectedName
+$dataDir = Join-Path $root 'data'
 
-# Find any .xlsx files in dataDir (ensure array to safely use .Count)
-$xlsxFiles = @(Get-ChildItem -LiteralPath $dataDir -Filter '*.xlsx' -ErrorAction SilentlyContinue)
-
-if ($xlsxFiles.Count -eq 0) {
-    Abort "Data file not found: $dataPath`nPlease place your データ_edit.xlsx in data\raw\ and re-run."
-}
-
-# Try to find file matching expected name (exact or normalized NFC)
-$found = $null
-$expectedNorm = $expectedName.Normalize([System.Text.NormalizationForm]::FormC)
-foreach ($f in $xlsxFiles) {
-    $n = $f.Name
-    if ($n -eq $expectedName) { $found = $f; break }
-    if ($n.Normalize([System.Text.NormalizationForm]::FormC) -eq $expectedNorm) { $found = $f; break }
-}
-
-if (-not $found) {
-    # fallback: use first .xlsx and warn
-    $found = $xlsxFiles[0]
-    Write-Host "Warning: expected file not found; using first .xlsx: $($found.Name)" -ForegroundColor Yellow
-}
-
-# If the found file path is not the expected path, copy it to expected filename so scripts that
-# look for the canonical name will work regardless of filename normalization.
-if ($found.FullName -ne $dataPath) {
-    Write-Host "Preparing data file: copying $($found.Name) -> $expectedName"
-    try {
-        Copy-Item -LiteralPath $found.FullName -Destination $dataPath -Force
-    } catch {
-        Abort "Failed to copy data file: $($_.Exception.Message)"
+# If the exact expected file exists under ./data, use it.
+$expectedPath = Join-Path $dataDir $expectedName
+if (Test-Path $expectedPath) {
+    $env:DATA_FILE = (Resolve-Path -LiteralPath $expectedPath).Path
+    Write-Host "Using expected data file: $env:DATA_FILE"
+} else {
+    # If the expected file isn't present, but there's exactly one .xlsx in ./data, use that one.
+    $xlsxFiles = @(Get-ChildItem -LiteralPath $dataDir -Filter '*.xlsx' -ErrorAction SilentlyContinue)
+    if ($xlsxFiles.Count -eq 1) {
+        $env:DATA_FILE = $xlsxFiles[0].FullName
+        Write-Host "Expected file not found; using the single .xlsx found in ./data: $env:DATA_FILE"
+    } else {
+        # zero or multiple files -> abort to avoid choices
+        if ($xlsxFiles.Count -eq 0) {
+            Abort "Data file not found: $expectedPath`nPlease place the exact file '$expectedName' under the 'data' directory and re-run."
+        } else {
+            $names = $xlsxFiles | ForEach-Object { $_.Name } | Sort-Object
+            $list = $names -join ", "
+            Abort "Multiple .xlsx files found in ./data: $list`nPlease ensure the expected file '$expectedName' is present (or leave exactly one .xlsx in ./data)."
+        }
     }
 }
 
@@ -101,6 +91,10 @@ try {
 
     if ($RunLowHigh) {
         Run-PythonScript ".\plot_low_high_individuals.py"
+    }
+
+    if ($RunMemoryType) {
+        Run-PythonScript ".\plot_memory_type_accuracy.py"
     }
 
     Write-Host "All scripts finished successfully." -ForegroundColor Green

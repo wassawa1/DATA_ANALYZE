@@ -13,7 +13,7 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 # ベースフォントサイズを上げて読みやすくする
 BASE_FONT_SIZE = 14
 LEGEND_FONT_SIZE = 12
-ANNOTATION_FONT_SIZE = 12
+ANNOTATION_FONT_SIZE = 8
 
 matplotlib.rcParams['font.size'] = BASE_FONT_SIZE
 matplotlib.rcParams['axes.titlesize'] = BASE_FONT_SIZE
@@ -67,8 +67,35 @@ def ensure_dir(path: str):
 
 
 def data_file_path(filename: str) -> str:
-    """`data/raw/` 配下のファイルパスを返す。ディレクトリが無ければ作成しない（ユーザーが元データを置く想定）。"""
-    return os.path.join(DATA_DIR, filename)
+    """Resolve the data file path using this precedence (do NOT read from data/raw by default):
+
+    1. If environment variable `DATA_FILE` is set and points to an existing file, use it.
+    2. If the requested filename exists in the repository root (same folder as this file's parent), use it.
+    3. Otherwise raise FileNotFoundError with a helpful message.
+
+    This avoids silently using `data/raw/` and respects the user's request not to rename/copy files.
+    """
+    # 1) env var override
+    env_path = os.environ.get("DATA_FILE")
+    if env_path:
+        env_path = os.path.abspath(env_path)
+        if os.path.exists(env_path):
+            return env_path
+        else:
+            raise FileNotFoundError(f"Environment variable DATA_FILE is set but file not found: {env_path}")
+
+    # 2) check repository root (assume this file is in repo root or a child)
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    candidate = os.path.join(repo_root, filename)
+    if os.path.exists(candidate):
+        return candidate
+
+    # Not found: raise so caller can abort with clear instruction
+    raise FileNotFoundError(
+        f"Data file '{filename}' not found. Set the environment variable DATA_FILE to the path of your Excel file,\n"
+        f"or place '{filename}' in the repository root ({repo_root}).\n"
+        f"Note: this function will NOT automatically read from data/raw or rename files."
+    )
 
 
 def output_file_path(filename: str) -> str:
@@ -80,3 +107,26 @@ def output_file_path(filename: str) -> str:
 def ensure_data_dir():
     """`data/raw/` ディレクトリを作成する（元データを置くためのフォルダ）。"""
     ensure_dir(DATA_DIR)
+
+
+# Default output image settings to ensure consistent physical size
+OUTPUT_DPI = 300
+# default figure size in inches (width, height). Can be overridden per-figure.
+OUTPUT_FIGSIZE = (14, 12)
+
+
+def save_figure(fig, filename: str, figsize: tuple = None, dpi: int = None):
+    """Save a Matplotlib figure using project defaults to ensure consistent image size.
+
+    - `filename` is a basename saved under `outputs/`.
+    - If `figsize` or `dpi` are not provided, `OUTPUT_FIGSIZE`/`OUTPUT_DPI` are used.
+    - This does not use `bbox_inches='tight'` so pixel dimensions remain consistent.
+    """
+    if figsize is None:
+        figsize = OUTPUT_FIGSIZE
+    if dpi is None:
+        dpi = OUTPUT_DPI
+
+    fig.set_size_inches(figsize)
+    out_path = output_file_path(filename)
+    fig.savefig(out_path, dpi=dpi)
