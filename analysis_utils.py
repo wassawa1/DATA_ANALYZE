@@ -51,6 +51,29 @@ groups = [
 ]
 
 
+# Low / High の対応表（ペアリスト） - 多くのスクリプトで共通利用するためこちらに移動しました。
+LOW_HIGH_PAIRS = [
+    (6, 31), (7, 30), (19, 21), (20, 34), (39, 77), (40, 66),
+    (44, 92), (45, 69), (49, 79), (52, 84),
+    ([53,54,55], [71,72,73,74,75,76]),
+    (56, 63), (93, 128), (95, 127), (97, 121), (99, 134),
+    (106, 124), (108, 131), (110, 132), (118, 123), (103, 125), (113, 130)
+]
+
+
+def expand_pairs(pairs):
+    """Expand a list of low/high pairs where each element may be an int or list.
+
+    Returns two sorted lists: (low_items, high_items).
+    """
+    low_items = []
+    high_items = []
+    for low, high in pairs:
+        low_items.extend(low if isinstance(low, list) else [low])
+        high_items.extend(high if isinstance(high, list) else [high])
+    return sorted(low_items), sorted(high_items)
+
+
 def load_sheet(path: str, sheet_name: str) -> pd.DataFrame:
     """Excel シートを読み込み、点数列を正規化して返す。"""
     df = pd.read_excel(path, sheet_name=sheet_name)

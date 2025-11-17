@@ -124,15 +124,46 @@ def main():
     bars_comb = ax2.bar(x, combined_means, width*2, color='C2')
     ax2.set_xticks(x)
     ax2.set_xticklabels(names, rotation=30, ha='right')
-    ax2.set_ylim(0, 1)
+    # 上側に余白を作って注釈や平均線が重ならないようにする
+    top_limit = min(1.12, max(1.0, max(combined_means) + 0.12))
+    ax2.set_ylim(0, top_limit)
     ax2.set_ylabel('正答率')
     ax2.set_title('順序記憶 6 グループ別：告知/未告知 合成平均')
 
+    # バーラベルを大きめに、白背景ボックスで見やすく配置
+    label_fs = max(8, ANNOTATION_FONT_SIZE + 4)
     for bar, stats in zip(bars_comb, combined_stats):
         h = bar.get_height()
-        ax2.annotate(format_label(*stats), xy=(bar.get_x() + bar.get_width()/2, h), xytext=(0, 6),
-                     textcoords='offset points', ha='center', va='bottom', fontsize=max(6, ANNOTATION_FONT_SIZE-2))
+        ax2.annotate(
+            format_label(*stats),
+            xy=(bar.get_x() + bar.get_width() / 2, h),
+            xytext=(0, 6),
+            textcoords='offset points',
+            ha='center',
+            va='bottom',
+            fontsize=label_fs,
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.85, ec='none')
+        )
 
+    # 全体平均（合計正解 / 合計件数）を計算して黒の点線で描画
+    total_correct = sum(s[1] for s in combined_stats)
+    total_count = sum(s[2] for s in combined_stats)
+    overall_mean = (total_correct / total_count) if total_count else 0
+    ax2.hlines(overall_mean, -0.5, len(groups) - 0.5, colors='k', linestyles='--', linewidth=3)
+    # 平均ラベルは線の右側に表示して重なりを回避
+    mean_label_fs = max(9, ANNOTATION_FONT_SIZE + 3)
+    ax2.annotate(
+        f"平均 {overall_mean*100:.1f}%",
+        xy=(len(groups) - 0.5, overall_mean),
+        xytext=(10, 6),
+        textcoords='offset points',
+        ha='left',
+        va='bottom',
+        fontsize=mean_label_fs,
+        bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.9, ec='none')
+    )
+
+    fig2.subplots_adjust(top=0.92)
     save_figure(fig2, "順序記憶_6groups.png", figsize=fig2.get_size_inches())
     plt.show()
 

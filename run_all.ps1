@@ -19,6 +19,9 @@ param(
     [switch]$RunLevelByScore,
     [switch]$RunLowHigh,
     [switch]$RunMemoryType,
+    [switch]$RunOrderGroupsAccuracy,
+    [switch]$RunOrderGroupsHalves,
+    [switch]$RunOrderGroupsLevels,
     [switch]$OpenOutputs
 )
 
@@ -66,10 +69,15 @@ if (-not (Test-Path $outDir)) {
     New-Item -ItemType Directory -Path $outDir | Out-Null
 }
 
-if (-not ($RunMovieGroup -or $RunLevelByScore -or $RunLowHigh)) {
+if (-not ($RunMovieGroup -or $RunLevelByScore -or $RunLowHigh -or $RunMemoryType -or $RunOrderGroupsAccuracy -or $RunOrderGroupsHalves -or $RunOrderGroupsLevels)) {
+    # If no specific switches provided, enable the common set including the new order-group plots
     $RunMovieGroup = $true
     $RunLevelByScore = $true
     $RunLowHigh = $true
+    $RunMemoryType = $true
+    $RunOrderGroupsAccuracy = $true
+    $RunOrderGroupsHalves = $true
+    $RunOrderGroupsLevels = $true
 }
 
 function Run-PythonScript($script) {
@@ -95,6 +103,18 @@ try {
 
     if ($RunMemoryType) {
         Run-PythonScript ".\plot_memory_type_accuracy.py"
+    }
+
+    if ($RunOrderGroupsAccuracy) {
+        Run-PythonScript ".\plot_order_groups_accuracy.py"
+    }
+
+    if ($RunOrderGroupsHalves) {
+        Run-PythonScript ".\plot_order_groups_halves.py"
+    }
+
+    if ($RunOrderGroupsLevels) {
+        Run-PythonScript ".\plot_order_groups_levels.py"
     }
 
     Write-Host "All scripts finished successfully." -ForegroundColor Green

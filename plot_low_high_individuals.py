@@ -8,23 +8,7 @@ import mplcursors
 from analysis_utils import load_sheet, data_file_path, output_file_path, ensure_data_dir, ANNOTATION_FONT_SIZE, LEGEND_FONT_SIZE
 
 
-# Low / High の対応表（ペアリスト）
-pairs = [
-    (6, 31), (7, 30), (19, 21), (20, 34), (39, 77), (40, 66),
-    (44, 92), (45, 69), (49, 79), (52, 84),
-    ([53,54,55], [71,72,73,74,75,76]),
-    (56, 63), (93, 128), (95, 127), (97, 121), (99, 134),
-    (106, 124), (108, 131), (110, 132), (118, 123), (103, 125), (113, 130)
-]
-
-
-def expand_pairs(pairs):
-    low_items = []
-    high_items = []
-    for low, high in pairs:
-        low_items.extend(low if isinstance(low, list) else [low])
-        high_items.extend(high if isinstance(high, list) else [high])
-    return sorted(low_items), sorted(high_items)
+from analysis_utils import LOW_HIGH_PAIRS, expand_pairs
 
 
 def compute_low_high(df, low_items, high_items):
@@ -48,7 +32,7 @@ def main():
     df_win = load_sheet(data_path, sheet_name="告知")
     df_wo  = load_sheet(data_path, sheet_name="未告知")
 
-    low_items, high_items = expand_pairs(pairs)
+    low_items, high_items = expand_pairs(LOW_HIGH_PAIRS)
 
     df_win = compute_low_high(df_win, low_items, high_items)
     df_wo  = compute_low_high(df_wo,  low_items, high_items)
