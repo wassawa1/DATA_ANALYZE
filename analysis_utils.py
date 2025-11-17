@@ -67,13 +67,15 @@ def ensure_dir(path: str):
 
 
 def data_file_path(filename: str) -> str:
-    """Resolve the data file path using this precedence (do NOT read from data/raw by default):
+    """Resolve the data file path using this precedence (keeps file names unchanged):
 
     1. If environment variable `DATA_FILE` is set and points to an existing file, use it.
-    2. If the requested filename exists in the repository root (same folder as this file's parent), use it.
-    3. Otherwise raise FileNotFoundError with a helpful message.
+    2. If `filename` exists in the repository root, use it.
+    3. If `filename` exists in `./data` or `./data/raw`, use it.
+    4. If a single `.xlsx` file exists in `./data` or `./data/raw`, use that file.
 
-    This avoids silently using `data/raw/` and respects the user's request not to rename/copy files.
+    If multiple `.xlsx` files are found in a data directory, we raise so the user
+    can explicitly set `DATA_FILE` (we do not guess among multiple candidates).
     """
     # 1) env var override
     env_path = os.environ.get("DATA_FILE")
@@ -84,17 +86,51 @@ def data_file_path(filename: str) -> str:
         else:
             raise FileNotFoundError(f"Environment variable DATA_FILE is set but file not found: {env_path}")
 
-    # 2) check repository root (assume this file is in repo root or a child)
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    # repository root (directory containing this file)
+    repo_root = os.path.abspath(os.path.dirname(__file__))
+
+    # 2) direct match in repo root
     candidate = os.path.join(repo_root, filename)
     if os.path.exists(candidate):
         return candidate
 
-    # Not found: raise so caller can abort with clear instruction
+    # helper to search a directory: exact filename first, then single-xlsx fallback
+    def _search_dir_for_file(directory: str):
+        if not os.path.isdir(directory):
+            return None
+        exact = os.path.join(directory, filename)
+        if os.path.exists(exact):
+            return exact
+        # gather .xlsx files (ignore temp/hidden files starting with ~)
+        xlsx_files = [
+            os.path.join(directory, f)
+            for f in os.listdir(directory)
+            if f.lower().endswith('.xlsx') and not f.startswith('~')
+        ]
+        if len(xlsx_files) == 1:
+            return os.path.abspath(xlsx_files[0])
+        return None
+
+    # 3) search ./data and ./data/raw (same rules)
+    data_dirs = [os.path.join(repo_root, 'data'), os.path.join(repo_root, 'data', 'raw')]
+    for d in data_dirs:
+        found = _search_dir_for_file(d)
+        if found:
+            return found
+
+    # Nothing matched: construct helpful error message listing options
+    tried = [
+        ("env DATA_FILE", os.environ.get('DATA_FILE')),
+        ("repo root", candidate),
+    ]
+    tried_dirs = '\n'.join([f" - {p}" for p in data_dirs])
     raise FileNotFoundError(
-        f"Data file '{filename}' not found. Set the environment variable DATA_FILE to the path of your Excel file,\n"
-        f"or place '{filename}' in the repository root ({repo_root}).\n"
-        f"Note: this function will NOT automatically read from data/raw or rename files."
+        f"Data file '{filename}' not found. Tried:\n"
+        f" - Environment variable DATA_FILE: {os.environ.get('DATA_FILE')}\n"
+        f" - Repository root: {candidate}\n"
+        f" - Data directories (exact filename or single .xlsx fallback):\n{tried_dirs}\n\n"
+        f"Please set the environment variable `DATA_FILE` to the exact file path,\n"
+        f"or place a single .xlsx in one of the data directories, or put '{filename}' in the repo root."
     )
 
 
