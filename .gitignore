@@ -2,5 +2,5 @@
 __pycache__/
 *.pyc
 .vscode/
-data/
+data/raw/
 test.py
