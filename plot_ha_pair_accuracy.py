@@ -88,9 +88,9 @@ def main():
     df_win = add_group_accuracy_columns(df_win, groups)
     df_wo  = add_group_accuracy_columns(df_wo, groups)
 
-    # Create a single figure with top: aggregated low/high bars, bottom: VFレベル vs 正答率 (two small subplots)
-    fig = plt.figure(figsize=(14, 14))
-    gs = gridspec.GridSpec(3, 1, height_ratios=[2, 1, 1], hspace=0.4)
+    # Create a single figure with top: aggregated low/high bars, bottom: VFレベル vs 正答率 (bar plot)
+    fig = plt.figure(figsize=(14, 12))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1], hspace=0.4)
 
     # Top large axis (subplot 211)
     ax_top = fig.add_subplot(gs[0, 0])
@@ -123,53 +123,51 @@ def main():
             ax_top.annotate(f"{mean*100:.1f}%\n({corr}/{den})", xy=(bar.get_x() + bar.get_width() / 2, h), xytext=(0, 4),
                             textcoords='offset points', ha='center', va='bottom', fontsize=ann_fs)
 
-    # Bottom: draw VFレベル vs 正答率 using the same plotting logic as plot_level_by_score.plot_dual_level
-    ax_vf_win = fig.add_subplot(gs[1, 0])
-    ax_vf_wo = fig.add_subplot(gs[2, 0])
+    # Bottom axis (subplot 212): VFレベルを x 軸にした低 vs 高 の棒グラフ
+    ax_bottom = fig.add_subplot(gs[1, 0])
 
-    acc_cols = [f"acc_{g[2]}" for g in groups]
-    x_labels = [g[2] for g in groups]
-    movie_ranges = [(0, 1), (2, 3), (4, 5)]
+    # compute low/high stats by VFレベル
+    vf_left_mean, vf_left_corr, vf_left_den = compute_stats_by_level(df, 'VFレベル', left_cols)
+    vf_right_mean, vf_right_corr, vf_right_den = compute_stats_by_level(df, 'VFレベル', right_cols)
 
-    win_mean = df_win.groupby("VFレベル")[acc_cols].mean()
-    wo_mean  = df_wo.groupby("VFレベル")[acc_cols].mean()
+    vf_levels = sorted(set(vf_left_mean.index.tolist()) | set(vf_right_mean.index.tolist()))
+    vf_left_mean = vf_left_mean.reindex(vf_levels, fill_value=np.nan)
+    vf_right_mean = vf_right_mean.reindex(vf_levels, fill_value=np.nan)
+    vf_left_corr = vf_left_corr.reindex(vf_levels, fill_value=0)
+    vf_left_den = vf_left_den.reindex(vf_levels, fill_value=0)
+    vf_right_corr = vf_right_corr.reindex(vf_levels, fill_value=0)
+    vf_right_den = vf_right_den.reindex(vf_levels, fill_value=0)
 
-    levels_vf = list(win_mean.index)
-    cmap = plt.get_cmap('tab10')
-    color_map = {lvl: cmap(i % cmap.N) for i, lvl in enumerate(levels_vf)}
+    x_v = np.arange(len(vf_levels))
+    w = 0.35
+    bars_lv = ax_bottom.bar(x_v - w/2, vf_left_mean.values, w, label='低', color='C0')
+    bars_rv = ax_bottom.bar(x_v + w/2, vf_right_mean.values, w, label='高', color='C1')
+    ax_bottom.set_xticks(x_v)
+    ax_bottom.set_xticklabels([str(int(v)) for v in vf_levels], rotation=30, ha='right')
+    ax_bottom.set_ylim(0, 1)
+    ax_bottom.set_ylabel('正答率')
+    ax_bottom.set_xlabel('VFレベル')
+    ax_bottom.set_title('VFレベル別 正答率：低 vs 高')
+    ax_bottom.legend()
 
-    for lvl, row in win_mean.iterrows():
-        vals = row.values
-        color = color_map[lvl]
-        for (s, e) in movie_ranges:
-            ax_vf_win.plot(list(range(s, e+1)), vals[s:e+1], marker="o", color=color, label=f"VFレベル {lvl}" if s==movie_ranges[0][0] else None)
+    # annotate
+    ann_fs = max(7, ANNOTATION_FONT_SIZE - 2)
+    for i, bar in enumerate(bars_lv):
+        mean = vf_left_mean.values[i]
+        if not np.isnan(mean):
+            corr = int(vf_left_corr.values[i])
+            den = int(vf_left_den.values[i])
+            ax_bottom.annotate(f"{mean*100:.1f}%\n({corr}/{den})", xy=(bar.get_x() + bar.get_width()/2, bar.get_height()), xytext=(0,4),
+                               textcoords='offset points', ha='center', va='bottom', fontsize=ann_fs)
+    for i, bar in enumerate(bars_rv):
+        mean = vf_right_mean.values[i]
+        if not np.isnan(mean):
+            corr = int(vf_right_corr.values[i])
+            den = int(vf_right_den.values[i])
+            ax_bottom.annotate(f"{mean*100:.1f}%\n({corr}/{den})", xy=(bar.get_x() + bar.get_width()/2, bar.get_height()), xytext=(0,4),
+                               textcoords='offset points', ha='center', va='bottom', fontsize=ann_fs)
 
-    mean_win_vals = win_mean.mean(axis=0).values
-    for (s, e) in movie_ranges:
-        ax_vf_win.plot(list(range(s, e+1)), mean_win_vals[s:e+1], linestyle="--", color="black", linewidth=3, label="平均（告知）" if s==movie_ranges[0][0] else None)
-
-    ax_vf_win.set_title("告知：VFレベルごとの平均正答率")
-    ax_vf_win.set_ylabel("正答率")
-    ax_vf_win.set_ylim(0, 1)
-    ax_vf_win.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
-
-    for lvl, row in wo_mean.iterrows():
-        vals = row.values
-        color = color_map.get(lvl, cmap(0))
-        for (s, e) in movie_ranges:
-            ax_vf_wo.plot(list(range(s, e+1)), vals[s:e+1], marker="o", color=color, label=f"VFレベル {lvl}" if s==movie_ranges[0][0] else None)
-
-    mean_wo_vals = wo_mean.mean(axis=0).values
-    for (s, e) in movie_ranges:
-        ax_vf_wo.plot(list(range(s, e+1)), mean_wo_vals[s:e+1], linestyle="--", color="black", linewidth=3, label="平均（未告知）" if s==movie_ranges[0][0] else None)
-
-    ax_vf_wo.set_title("未告知：VFレベルごとの平均正答率")
-    ax_vf_wo.set_ylabel("正答率")
-    ax_vf_wo.set_ylim(0, 1)
-    ax_vf_wo.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
-
-    plt.xticks(list(range(len(x_labels))), x_labels, rotation=30, ha='right')
-    fig.subplots_adjust(bottom=0.10, right=0.78)
+    fig.subplots_adjust(bottom=0.12, right=0.80)
 
     save_name = "HA_pair_and_VFlevels.png"
     save_figure(fig, save_name, figsize=fig.get_size_inches())
