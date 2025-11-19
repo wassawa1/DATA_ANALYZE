@@ -89,6 +89,22 @@ function Run-PythonScript($script) {
 }
 
 try {
+    # すべての plot_*.py を自動実行
+    $plotScripts = Get-ChildItem -Path $root -Filter 'plot_*.py' | Sort-Object Name
+    foreach ($script in $plotScripts) {
+        Run-PythonScript $script.Name
+    }
+
+    Write-Host "All plot_*.py scripts finished successfully." -ForegroundColor Green
+
+    if ($OpenOutputs) {
+        Write-Host "Opening outputs folder: $outDir"
+        Start-Process explorer.exe $outDir
+    }
+
+    Pop-Location
+    return
+
     if ($RunMovieGroup) {
         Run-PythonScript ".\plot_movie_group_accuracy.py"
     }

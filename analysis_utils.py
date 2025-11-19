@@ -1,3 +1,21 @@
+# 設問番号からHAレベルを返す関数
+def get_ha_level(idx):
+    """
+    設問番号 idx から HAレベル (1,2,3,4) を返す。
+    データフレームの 'HAレベル' 列の値と一致するように設計。
+    必要に応じて範囲を調整してください。
+    """
+    # 例: 1-37: 1, 38-62: 2, 63-92: 3, 93-134: 4
+    if 1 <= idx <= 37:
+        return 1
+    elif 38 <= idx <= 62:
+        return 2
+    elif 63 <= idx <= 92:
+        return 3
+    elif 93 <= idx <= 134:
+        return 4
+    # 135以降は順序記憶なので None
+    return None
 import os
 import pandas as pd
 import matplotlib
