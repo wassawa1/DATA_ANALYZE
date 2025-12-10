@@ -12,3 +12,4 @@ dependencies = [
     "pandas>=2.3.3",
     "statsmodels>=0.14.5",
 ]
+

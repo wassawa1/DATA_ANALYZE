@@ -1,0 +1,25 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:               accuracy   R-squared:                       0.326
+Model:                            OLS   Adj. R-squared:                  0.315
+Method:                 Least Squares   F-statistic:                     61.22
+Date:                Wed, 10 Dec 2025   Prob (F-statistic):           1.25e-08
+Time:                        23:24:13   Log-Likelihood:                 64.337
+No. Observations:                  60   AIC:                            -124.7
+Df Residuals:                      58   BIC:                            -120.5
+Df Model:                           1                                         
+Covariance Type:              cluster                                         
+===========================================================================================
+                              coef    std err          z      P>|z|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   0.5931      0.015     39.893      0.000       0.564       0.622
+C(memory_type)[T.order]     0.1152      0.015      7.824      0.000       0.086       0.144
+==============================================================================
+Omnibus:                        6.033   Durbin-Watson:                   2.069
+Prob(Omnibus):                  0.049   Jarque-Bera (JB):                5.099
+Skew:                           0.664   Prob(JB):                       0.0781
+Kurtosis:                       3.525   Cond. No.                         2.62
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
