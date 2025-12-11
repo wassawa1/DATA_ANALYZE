@@ -1,0 +1,19 @@
+                      Mixed Linear Model Regression Results
+==================================================================================
+Model:                    MixedLM       Dependent Variable:       accuracy_sensory
+No. Observations:         4020          Method:                   REML            
+No. Groups:               30            Scale:                    0.0000          
+Min. group size:          134           Log-Likelihood:           64063.5652      
+Max. group size:          134           Converged:                Yes             
+Mean group size:          134.0                                                   
+----------------------------------------------------------------------------------
+                                       Coef.  Std.Err.    z    P>|z| [0.025 0.975]
+----------------------------------------------------------------------------------
+Intercept                               0.593    0.002 335.416 0.000  0.590  0.596
+C(intensity)[T.low]                    -0.000    0.000  -0.066 0.948 -0.000  0.000
+C(expectancy)[T.1]                     -0.004    0.002  -1.580 0.114 -0.009  0.001
+C(intensity)[T.low]:C(expectancy)[T.1]  0.000    0.000   0.012 0.991 -0.000  0.000
+Group Var                               0.000   43.978                            
+Group x C(intensity)[T.low] Cov         0.000    0.414                            
+C(intensity)[T.low] Var                 0.000                                     
+==================================================================================

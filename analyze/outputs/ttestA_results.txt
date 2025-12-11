@@ -1,0 +1,6 @@
+Paired t-test results:
+t(29) = 2.4238, p = 0.0218
+Cohen's d = 0.4425
+Low intensity: M = 0.6115, SD = 0.0748
+High intensity: M = 0.5723, SD = 0.1082
+結論: 有意差あり
