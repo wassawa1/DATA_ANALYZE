@@ -90,7 +90,7 @@ model = smf.ols(
     cov_kwds={"groups": df_long["subject"]}
 )
 
-with open(OUTPUT_DIR / "analyze_output.txt", "w", encoding="utf-8") as f:
+with open(OUTPUT_DIR / "analyze_output_model1.txt", "w", encoding="utf-8") as f:
 	print(model.summary(), file=f)
 
 # -------------------------
@@ -106,7 +106,7 @@ ax.set_xticklabels(["Sensory", "Order"])
 ax.grid(axis="y")
 plt.tight_layout()
 # 自動保存
-out_path = OUTPUT_DIR / "boxplot_accuracy.png"
+out_path = OUTPUT_DIR / "boxplot_accuracy_model1.png"
 ax.get_figure().savefig(out_path, dpi=SAVE_DPI, bbox_inches="tight")
 print(f"Saved figure: {out_path}")
 if SHOW_FIGURES:
@@ -142,7 +142,7 @@ ax.set_ylabel("Accuracy")
 ax.grid(axis="y")
 plt.tight_layout()
 # 自動保存
-out_path2 = OUTPUT_DIR / "paired_within_subjects.png"
+out_path2 = OUTPUT_DIR / "paired_within_subjects_model1.png"
 fig.savefig(out_path2, dpi=SAVE_DPI, bbox_inches="tight")
 print(f"Saved figure: {out_path2}")
 if SHOW_FIGURES:

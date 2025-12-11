@@ -3,8 +3,8 @@
 Dep. Variable:               accuracy   R-squared:                       0.326
 Model:                            OLS   Adj. R-squared:                  0.315
 Method:                 Least Squares   F-statistic:                     61.22
-Date:                Wed, 10 Dec 2025   Prob (F-statistic):           1.25e-08
-Time:                        23:24:13   Log-Likelihood:                 64.337
+Date:                Thu, 11 Dec 2025   Prob (F-statistic):           1.25e-08
+Time:                        21:23:07   Log-Likelihood:                 64.337
 No. Observations:                  60   AIC:                            -124.7
 Df Residuals:                      58   BIC:                            -120.5
 Df Model:                           1                                         

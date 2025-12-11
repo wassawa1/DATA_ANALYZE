@@ -1,0 +1,27 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:               accuracy   R-squared:                       0.327
+Model:                            OLS   Adj. R-squared:                  0.290
+Method:                 Least Squares   F-statistic:                     22.77
+Date:                Thu, 11 Dec 2025   Prob (F-statistic):           8.92e-08
+Time:                        21:28:15   Log-Likelihood:                 64.348
+No. Observations:                  60   AIC:                            -120.7
+Df Residuals:                      56   BIC:                            -112.3
+Df Model:                           3                                         
+Covariance Type:              cluster                                         
+============================================================================================================
+                                               coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------------------------------
+Intercept                                    0.5954      0.026     23.008      0.000       0.545       0.646
+C(memory_type)[T.order]                      0.1129      0.025      4.603      0.000       0.065       0.161
+C(is_告知)[T.True]                            -0.0046      0.030     -0.152      0.880      -0.064       0.055
+C(memory_type)[T.order]:C(is_告知)[T.True]     0.0047      0.030      0.157      0.875      -0.054       0.063
+==============================================================================
+Omnibus:                        5.735   Durbin-Watson:                   2.070
+Prob(Omnibus):                  0.057   Jarque-Bera (JB):                4.798
+Skew:                           0.647   Prob(JB):                       0.0908
+Kurtosis:                       3.494   Cond. No.                         6.85
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)

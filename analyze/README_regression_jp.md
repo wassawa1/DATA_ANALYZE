@@ -37,6 +37,8 @@
 モデル1：記憶タイプの主効果のみを見る
 - `accuracy ~ C(memory_type)`
 
+-> これはanalze/analyze_regression_1.py内で実装
+
 モデル2：記憶タイプと告知条件およびその交互作用を含める
 - `accuracy ~ C(memory_type) * C(expectancy)`
 
@@ -47,6 +49,8 @@
   - 記憶タイプの主効果（順序記憶が感覚記憶より高いか）
   - 告知条件の主効果
   - 両者の交互作用の有意性
+
+-> これはanalyze/analyze_regression_2.py内で実装
 
 ### 四、出力（詳細）
 1. 各モデルについて、回帰係数、標準誤差、t 値、p 値、決定係数（R²）などのサマリーを出力します。
